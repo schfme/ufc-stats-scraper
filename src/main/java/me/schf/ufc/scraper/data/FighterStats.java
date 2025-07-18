@@ -83,4 +83,12 @@ public class FighterStats {
 			return new FighterStats(this);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "FighterStats [name=" + name + ", knockdowns=" + knockdowns + ", significantStrikes="
+				+ significantStrikes + ", takedowns=" + takedowns + ", submissionAttempts=" + submissionAttempts
+				+ ", isWinner=" + isWinner + "]";
+	}
+
 }

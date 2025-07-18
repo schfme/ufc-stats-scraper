@@ -87,4 +87,12 @@ public class FightResult {
 			return new FightResult(this);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "FightResult [fighterStatsList=" + fighterStatsList + ", weightClass=" + weightClass + ", method="
+				+ method + ", round=" + round + ", finalRoundEndTime=" + finalRoundEndTime + ", isTitleFight="
+				+ isTitleFight + "]";
+	}
+
 }
