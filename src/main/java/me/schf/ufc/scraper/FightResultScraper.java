@@ -78,7 +78,9 @@ public class FightResultScraper {
         var method = Utils.getTextSafe(cols.get(indices.getMethodIndex()));
         var round = Utils.getTextSafe(cols.get(indices.getRoundIndex()));
         var finalRoundEndTime = Utils.parseFightTime(Utils.getTextSafe(cols.get(indices.getTimeIndex())));
-        var isTitleFight = row.select(".b-fight-details__fight-title").text().toLowerCase().contains("title");
+        var weightClassCol = cols.get(indices.getWeightClassIndex());
+        // checking if the row has the little belt picture :)
+        boolean isTitleFight = !weightClassCol.select("img[src*=belt.png]").isEmpty();
 
         return new FightResult.Builder()
             .fighterStatsList(fighterStatsList)

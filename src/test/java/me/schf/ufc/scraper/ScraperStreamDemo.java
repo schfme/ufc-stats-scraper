@@ -10,10 +10,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 public class ScraperStreamDemo {
 
 	public static void main(String[] args) throws Exception {
-	    Scraper scraper = new Scraper.Builder()
-	            .startDate(LocalDate.now().minusMonths(1))
-	            .linkAccessDelay(Duration.ofSeconds(1))
-	            .build();
+        LocalDate targetDate = LocalDate.of(2025, 6, 7);
+
+        Scraper scraper = new Scraper.Builder()
+                .startDate(targetDate)
+                .endDate(targetDate)
+                .linkAccessDelay(Duration.ofSeconds(1))
+                .build();
 
 	    ObjectMapper mapper = new ObjectMapper();
 	    mapper.registerModule(new JavaTimeModule());
