@@ -1,13 +1,18 @@
 package me.schf.ufc.scraper;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import me.schf.ufc.scraper.data.FightResult;
 import me.schf.ufc.scraper.data.FighterStats;
+import me.schf.ufc.scraper.data.Method;
+import me.schf.ufc.scraper.data.WeightClass;
+
 
 public class FightResultScraper {
 
@@ -41,10 +46,10 @@ public class FightResultScraper {
         var winnerFlagParagraphs = cols.get(indices.getWlIndex())
         	    .select("p.b-fight-details__table-text");
 
-        var kdVals = Utils.extractInts(cols.get(indices.getKdIndex()));
-        var strVals = Utils.extractInts(cols.get(indices.getStrIndex()));
-        var tdVals = Utils.extractInts(cols.get(indices.getTdIndex()));
-        var subVals = Utils.extractInts(cols.get(indices.getSubIndex()));
+        var kdVals = extractInts(cols.get(indices.getKdIndex()));
+        var strVals = extractInts(cols.get(indices.getStrIndex()));
+        var tdVals = extractInts(cols.get(indices.getTdIndex()));
+        var subVals = extractInts(cols.get(indices.getSubIndex()));
 
         var fighterStatsList = new ArrayList<FighterStats>();
 
@@ -74,10 +79,10 @@ public class FightResultScraper {
             fighterStatsList.add(fighterStats);
         }
 
-        var weightClass = Utils.getTextSafe(cols.get(indices.getWeightClassIndex()));
-        var method = Utils.getTextSafe(cols.get(indices.getMethodIndex()));
-        var round = Utils.getTextSafe(cols.get(indices.getRoundIndex()));
-        var finalRoundEndTime = Utils.parseFightTime(Utils.getTextSafe(cols.get(indices.getTimeIndex())));
+        var weightClass = WeightClass.fromText(getTextSafe(cols.get(indices.getWeightClassIndex())));
+        var method = Method.fromText(getTextSafe(cols.get(indices.getMethodIndex())));
+        var round = getTextSafe(cols.get(indices.getRoundIndex()));
+        var finalRoundEndTime = parseFightTime(getTextSafe(cols.get(indices.getTimeIndex())));
         var weightClassCol = cols.get(indices.getWeightClassIndex());
         // checking if the row has the little belt picture :)
         boolean isTitleFight = !weightClassCol.select("img[src*=belt.png]").isEmpty();
@@ -91,6 +96,33 @@ public class FightResultScraper {
             .isTitleFight(isTitleFight)
             .build();
     }
+    
+	private static List<Integer> extractInts(Element col) {
+		var values = new ArrayList<Integer>();
+		for (var p : col.select("p.b-fight-details__table-text")) {
+			try {
+				values.add(Integer.parseInt(p.text().trim()));
+			} catch (NumberFormatException e) {
+				values.add(null);
+			}
+		}
+		return values;
+	}
+
+	private static String getTextSafe(Element td) {
+		return Optional.ofNullable(td.selectFirst("p.b-fight-details__table-text")).map(Element::text).map(String::trim)
+				.orElse("");
+	}
+
+	private static Duration parseFightTime(String timeStr) {
+		if (timeStr == null || timeStr.isBlank()) {
+			return Duration.ZERO;
+		}
+		var parts = timeStr.split(":");
+		var minutes = Integer.parseInt(parts[0]);
+		var seconds = Integer.parseInt(parts[1]);
+		return Duration.ofMinutes(minutes).plusSeconds(seconds);
+	}
 
 
 }

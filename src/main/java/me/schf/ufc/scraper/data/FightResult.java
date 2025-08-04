@@ -6,8 +6,8 @@ import java.util.List;
 public class FightResult {
 
 	private List<FighterStats> fighterStatsList;
-	private String weightClass;
-	private String method;
+	private WeightClass weightClass;
+	private Method method;
 	private String round;
 	private Duration finalRoundEndTime;
 	private boolean isTitleFight;
@@ -25,11 +25,11 @@ public class FightResult {
 		return fighterStatsList;
 	}
 
-	public String getWeightClass() {
+	public WeightClass getWeightClass() {
 		return weightClass;
 	}
 
-	public String getMethod() {
+	public Method getMethod() {
 		return method;
 	}
 
@@ -47,8 +47,8 @@ public class FightResult {
 
 	public static class Builder {
 		private List<FighterStats> fighterStatsList;
-		private String weightClass;
-		private String method;
+		private WeightClass weightClass;
+		private Method method;
 		private String round;
 		private Duration finalRoundEndTime;
 		private boolean isTitleFight;
@@ -58,12 +58,12 @@ public class FightResult {
 			return this;
 		}
 
-		public Builder weightClass(String weightClass) {
+		public Builder weightClass(WeightClass weightClass) {
 			this.weightClass = weightClass;
 			return this;
 		}
 
-		public Builder method(String method) {
+		public Builder method(Method method) {
 			this.method = method;
 			return this;
 		}
