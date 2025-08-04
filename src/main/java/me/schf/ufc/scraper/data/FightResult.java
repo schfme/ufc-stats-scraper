@@ -8,7 +8,7 @@ public class FightResult {
 	private List<FighterStats> fighterStatsList;
 	private WeightClass weightClass;
 	private Method method;
-	private String round;
+	private Round round;
 	private Duration finalRoundEndTime;
 	private boolean isTitleFight;
 
@@ -33,7 +33,7 @@ public class FightResult {
 		return method;
 	}
 
-	public String getRound() {
+	public Round getRound() {
 		return round;
 	}
 
@@ -49,7 +49,7 @@ public class FightResult {
 		private List<FighterStats> fighterStatsList;
 		private WeightClass weightClass;
 		private Method method;
-		private String round;
+		private Round round;
 		private Duration finalRoundEndTime;
 		private boolean isTitleFight;
 
@@ -68,7 +68,7 @@ public class FightResult {
 			return this;
 		}
 
-		public Builder round(String round) {
+		public Builder round(Round round) {
 			this.round = round;
 			return this;
 		}

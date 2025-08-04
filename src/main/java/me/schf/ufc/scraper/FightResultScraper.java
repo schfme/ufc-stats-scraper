@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 import me.schf.ufc.scraper.data.FightResult;
 import me.schf.ufc.scraper.data.FighterStats;
 import me.schf.ufc.scraper.data.Method;
+import me.schf.ufc.scraper.data.Round;
 import me.schf.ufc.scraper.data.WeightClass;
 
 public class FightResultScraper {
@@ -87,7 +88,7 @@ public class FightResultScraper {
 
         var weightClass = WeightClass.fromText(getTextSafe(cols.get(indices.getWeightClassIndex())));
         var method = Method.fromText(getTextSafe(cols.get(indices.getMethodIndex())));
-        var round = getTextSafe(cols.get(indices.getRoundIndex()));
+        var round = Round.fromText(getTextSafe(cols.get(indices.getRoundIndex())));
         var finalRoundEndTime = parseFightTime(getTextSafe(cols.get(indices.getTimeIndex())));
 
         var weightClassCol = cols.get(indices.getWeightClassIndex());
