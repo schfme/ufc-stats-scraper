@@ -28,6 +28,14 @@ public class EventScraper {
     private final LocalDate endDate;
     private final Duration linkAccessDelay;
 
+    private static class Selectors {
+        static final String ROW = "tr.b-statistics__table-row";
+        static final String HEADER_CELL = "th";
+        static final String DATE_SPAN = "span.b-statistics__date";
+        static final String EVENT_LINK = "a[href*=/event-details/]";
+        static final String TABLE_CELL = "td";
+    }
+
     public EventScraper(LocalDate startDate, LocalDate endDate, Duration linkAccessDelay) {
         this.startDate = startDate;
         this.endDate = endDate;
@@ -35,58 +43,50 @@ public class EventScraper {
     }
 
     public Stream<Event> scrapeEventsStream(Document allEventsPage) {
-        return allEventsPage.select("tr.b-statistics__table-row").stream()
-            .filter(row -> row.select("th").isEmpty())
-            .map(this::scrapeEventRow)
-            .filter(Optional::isPresent)
-            .map(Optional::get);
+        return allEventsPage.select(Selectors.ROW).stream()
+                .map(EventRowParser::new)
+                .filter(parser -> !parser.isHeader() && !parser.isEmpty())
+                .filter(parser -> isWithinDateRange(parser.getEventDate()))
+                .map(this::scrapeEvent)
+                .filter(Optional::isPresent)
+                .map(Optional::get);
     }
 
     public List<Event> scrapeEvents(Document allEventsPage) {
-        var events = new ArrayList<Event>();
+        List<Event> events = new ArrayList<>();
+        for (Element row : allEventsPage.select(Selectors.ROW)) {
+            EventRowParser parser = new EventRowParser(row);
 
-        var rows = allEventsPage.select("tr.b-statistics__table-row");
-        for (Element row : rows) {
-            if (!row.select("th").isEmpty()) {
+            if (parser.isHeader() || parser.isEmpty() || !isWithinDateRange(parser.getEventDate())) {
                 continue;
             }
 
-            Optional<Event> maybeEvent = scrapeEventRow(row);
-            maybeEvent.ifPresent(events::add);
+            scrapeEvent(parser).ifPresent(events::add);
         }
-
         return events;
     }
 
-    private Optional<Event> scrapeEventRow(Element row) {
+
+    private Optional<Event> scrapeEvent(EventRowParser parser) {
         try {
-            // skip empty rows
-            if (row.select("td").stream().allMatch(td -> td.text().trim().isEmpty())) {
+            Optional<Element> linkElOpt = parser.getEventLink();
+            if (linkElOpt.isEmpty()) {
                 return Optional.empty();
             }
 
-            var eventDate = extractDate(row);
-            if (!isWithinDateRange(eventDate)) {
-                return Optional.empty();
-            }
-
-            var linkEl = row.selectFirst("a[href*=/event-details/]");
-            if (linkEl == null) {
-                return Optional.empty();
-            }
-
-            var eventName = linkEl.text().trim();
-            var eventDetailLink = linkEl.attr("href");
+            Element linkEl = linkElOpt.get();
+            String eventName = linkEl.text().trim();
+            String eventDetailLink = linkEl.attr("href");
 
             Thread.sleep(linkAccessDelay.toMillis());
 
-            var eventDetailPage = Jsoup.connect(eventDetailLink).get();
-            var fightResultScraper = new FightResultScraper();
+            Document eventDetailPage = Jsoup.connect(eventDetailLink).get();
+            FightResultScraper fightResultScraper = new FightResultScraper();
             var fightResults = fightResultScraper.parseEventFights(eventDetailPage);
 
             Event event = new Event.Builder()
                     .eventName(eventName)
-                    .eventDate(eventDate)
+                    .eventDate(parser.getEventDate())
                     .fightResults(fightResults)
                     .build();
 
@@ -97,17 +97,42 @@ public class EventScraper {
             LOGGER.log(Level.SEVERE, "Thread interrupted while scraping event row", e);
             return Optional.empty();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to get event row.", e);
+            LOGGER.log(Level.SEVERE, "Failed to scrape event", e);
             return Optional.empty();
         }
     }
 
-    private LocalDate extractDate(Element row) {
-        var textDate = row.selectFirst("span.b-statistics__date").text();
-        return LocalDate.parse(textDate, EVENT_DATE_FORMAT);
-    }
-
     private boolean isWithinDateRange(LocalDate eventDate) {
         return !eventDate.isBefore(startDate) && !eventDate.isAfter(endDate);
+    }
+
+    private static class EventRowParser {
+        private final Element row;
+
+        EventRowParser(Element row) {
+            this.row = row;
+        }
+
+        boolean isHeader() {
+            return !row.select(Selectors.HEADER_CELL).isEmpty();
+        }
+
+        boolean isEmpty() {
+            return row.select(Selectors.TABLE_CELL).stream()
+                    .allMatch(td -> td.text().trim().isEmpty());
+        }
+
+        LocalDate getEventDate() {
+            return getEventDate(EVENT_DATE_FORMAT);
+        }
+
+        LocalDate getEventDate(DateTimeFormatter formatter) {
+            String dateText = row.selectFirst(Selectors.DATE_SPAN).text();
+            return LocalDate.parse(dateText, formatter);
+        }
+
+        Optional<Element> getEventLink() {
+            return Optional.ofNullable(row.selectFirst(Selectors.EVENT_LINK));
+        }
     }
 }

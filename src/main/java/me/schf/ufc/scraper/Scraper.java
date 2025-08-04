@@ -1,7 +1,6 @@
 package me.schf.ufc.scraper;
 
 import java.io.IOException;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,7 +12,7 @@ import org.jsoup.nodes.Document;
 import me.schf.ufc.scraper.data.Event;
 
 /**
- * Scraper class responsible for scraping UFC event data from the official statistics website.
+ * Scraper class responsible for scraping UFC event data from the official statistics site.
  * <p>
  * It supports scraping events within a specified inclusive date range and controls the
  * delay between HTTP requests to avoid rate limiting by the server.

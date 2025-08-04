@@ -1,120 +1,83 @@
 package me.schf.ufc.scraper;
 
-import java.util.HashSet;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class FightDetailColumnIndices {
 
-	private int wlIndex;
-	private int fighterIndex;
-	private int kdIndex;
-	private int strIndex;
-	private int tdIndex;
-	private int subIndex;
-	private int weightClassIndex;
-	private int methodIndex;
-	private int roundIndex;
-	private int timeIndex;
+    public enum Column {
+        WL("W/L"),
+        FIGHTER("Fighter"),
+        KD("Kd"),
+        STR("Str"),
+        TD("Td"),
+        SUB("Sub"),
+        WEIGHT_CLASS("Weight class"),
+        METHOD("Method"),
+        ROUND("Round"),
+        TIME("Time");
 
-	public FightDetailColumnIndices(List<String> columnNames) {
-		Set<String> found = new HashSet<>();
+        private final String name;
 
-		for (var i = 0; i < columnNames.size(); i++) {
-			var name = columnNames.get(i);
-			switch (name) {
-			case "W/L" -> {
-				wlIndex = i;
-				found.add(name);
-			}
-			case "Fighter" -> {
-				fighterIndex = i;
-				found.add(name);
-			}
-			case "Kd" -> {
-				kdIndex = i;
-				found.add(name);
-			}
-			case "Str" -> {
-				strIndex = i;
-				found.add(name);
-			}
-			case "Td" -> {
-				tdIndex = i;
-				found.add(name);
-			}
-			case "Sub" -> {
-				subIndex = i;
-				found.add(name);
-			}
-			case "Weight class" -> {
-				weightClassIndex = i;
-				found.add(name);
-			}
-			case "Method" -> {
-				methodIndex = i;
-				found.add(name);
-			}
-			case "Round" -> {
-				roundIndex = i;
-				found.add(name);
-			}
-			case "Time" -> {
-				timeIndex = i;
-				found.add(name);
-			}
-			default -> {
-				throw new IllegalStateException("Unknown column: %s".formatted(name));
-			}
-			}
-		}
+        Column(String name) {
+            this.name = name;
+        }
 
-		List<String> required = List.of("W/L", "Fighter", "Kd", "Str", "Td", "Sub", "Weight class", "Method", "Round",
-				"Time");
-		var missing = required.stream().filter(r -> !found.contains(r)).toList();
+        public String getName() {
+            return name;
+        }
 
-		if (!missing.isEmpty()) {
-			throw new IllegalStateException("Missing required columns: %s".formatted(missing));
-		}
-	}
+        public static Column fromName(String name) {
+            for (var col : values()) {
+                if (col.name.equals(name)) {
+                    return col;
+                }
+            }
+            throw new IllegalArgumentException("Unknown column name: " + name);
+        }
+    }
 
-	public int getWlIndex() {
-		return wlIndex;
-	}
+    private static final Set<String> REQUIRED_COLUMNS = Set.of(
+        "W/L", "Fighter", "Kd", "Str", "Td", "Sub", "Weight class", "Method", "Round", "Time"
+    );
 
-	public int getFighterIndex() {
-		return fighterIndex;
-	}
+    private final Map<Column, Integer> indices = new EnumMap<>(Column.class);
 
-	public int getKdIndex() {
-		return kdIndex;
-	}
+    public FightDetailColumnIndices(List<String> columnNames) {
+        for (int i = 0; i < columnNames.size(); i++) {
+            String name = columnNames.get(i);
+            try {
+                Column col = Column.fromName(name);
+                indices.put(col, i);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Unknown column: " + name, e);
+            }
+        }
 
-	public int getStrIndex() {
-		return strIndex;
-	}
+        // check required columns
+        List<String> missing = REQUIRED_COLUMNS.stream()
+                .filter(r -> !columnNames.contains(r))
+                .toList();
+        
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException("Missing required columns: " + missing);
+        }
+    }
 
-	public int getTdIndex() {
-		return tdIndex;
-	}
+    public int getIndex(Column column) {
+        return indices.get(column);
+    }
 
-	public int getSubIndex() {
-		return subIndex;
-	}
-
-	public int getWeightClassIndex() {
-		return weightClassIndex;
-	}
-
-	public int getMethodIndex() {
-		return methodIndex;
-	}
-
-	public int getRoundIndex() {
-		return roundIndex;
-	}
-
-	public int getTimeIndex() {
-		return timeIndex;
-	}
+    public int getWlIndex() { return getIndex(Column.WL); }
+    public int getFighterIndex() { return getIndex(Column.FIGHTER); }
+    public int getKdIndex() { return getIndex(Column.KD); }
+    public int getStrIndex() { return getIndex(Column.STR); }
+    public int getTdIndex() { return getIndex(Column.TD); }
+    public int getSubIndex() { return getIndex(Column.SUB); }
+    public int getWeightClassIndex() { return getIndex(Column.WEIGHT_CLASS); }
+    public int getMethodIndex() { return getIndex(Column.METHOD); }
+    public int getRoundIndex() { return getIndex(Column.ROUND); }
+    public int getTimeIndex() { return getIndex(Column.TIME); }
 }
